@@ -1,7 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 
-st.title("DeepSeek Chatbot")
+st.title("AI Coder")
 
 # DeepSeek API-Schlüssel direkt hier einfügen
 api_key = "sk-2c8fc6bcd4db4cefa226a4cc0e89e28e"  # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
