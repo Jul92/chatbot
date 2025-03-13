@@ -4,7 +4,7 @@ from openai import OpenAI
 st.title("AI Coder")
 
 # DeepSeek API-Schlüssel direkt hier einfügen
-api_key = API_KEY  # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+api_key = st.secrets[API_KEY] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 
 # DeepSeek-Client initialisieren
 client = OpenAI(
