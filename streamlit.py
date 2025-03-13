@@ -1,53 +1,46 @@
 import streamlit as st
 from openai import OpenAI
-import sys
 
-# Sicherstellen, dass UTF-8 als Standard-Encoding genutzt wird
-sys.stdout.reconfigure(encoding='utf-8')
+st.title("AI Coder")
 
-# DeepSeek API-Schlüssel (ersetze durch deinen eigenen Schlüssel)
-API_KEY = "sk-2c8fc6bcd4db4cefa226a4cc0e89e28e"
-BASE_URL = "https://api.deepseek.com"
-MODEL_NAME = "deepseek-r1"
+# DeepSeek API-Schlüssel direkt hier einfügen
+api_key = "sk-2c8fc6bcd4db4cefa226a4cc0e89e28e"  # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 
-# OpenAI Client für DeepSeek-R1 initialisieren
-client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+client = OpenAI(
+    api_key=api_key,
+    base_url="https://api.deepseek.com"
+)
 
-st.title("DeepSeek R1 Chatbot")
-
-# Chat-Verlauf im Sitzungszustand speichern
+# Chat-Verlauf (im Sitzungszustand)
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": "Du bist ein hilfreicher KI-Coding-Assistent."}]
+    st.session_state.messages = [{"role": "system", "content": "Du bist ein hilfreicher Assistent."}]
 
-# Bisherige Nachrichten anzeigen
+# Nachrichten anzeigen
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# Benutzereingabe erfassen
-prompt = st.chat_input("Deine Nachricht eingeben...")
+# Benutzereingabe
+prompt = st.chat_input("Deine Nachricht")
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # API-Anfrage an DeepSeek-R1
+    # DeepSeek API-Aufruf
     try:
         response = client.chat.completions.create(
-            model=MODEL_NAME,
+            model="deepseek-r1",
             messages=st.session_state.messages,
         )
-        
-        msg = response.choices[0].message.content.encode('utf-8', 'ignore').decode('utf-8')
-        
+        msg = response.choices[0].message.content
         st.session_state.messages.append({"role": "assistant", "content": msg})
         with st.chat_message("assistant"):
             st.markdown(msg)
     except Exception as e:
         st.error(f"Ein Fehler ist aufgetreten: {e}")
-        import traceback
-        traceback.print_exc()
+
 
 
 
