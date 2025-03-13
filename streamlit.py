@@ -8,12 +8,12 @@ sys.stdout.reconfigure(encoding='utf-8')
 # DeepSeek API-Schlüssel (ersetze durch deinen eigenen Schlüssel)
 API_KEY = "sk-2c8fc6bcd4db4cefa226a4cc0e89e28e"
 BASE_URL = "https://api.deepseek.com"
-MODEL_NAME = "deepseek-coder-v2"
+MODEL_NAME = "deepseek-r1"
 
-# OpenAI Client für DeepSeek-Coder-V2 initialisieren
+# OpenAI Client für DeepSeek-R1 initialisieren
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-st.title("AI Coder")
+st.title("DeepSeek R1 Chatbot")
 
 # Chat-Verlauf im Sitzungszustand speichern
 if "messages" not in st.session_state:
@@ -32,7 +32,7 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # API-Anfrage an DeepSeek-Coder-V2
+    # API-Anfrage an DeepSeek-R1
     try:
         response = client.chat.completions.create(
             model=MODEL_NAME,
@@ -48,5 +48,6 @@ if prompt:
         st.error(f"Ein Fehler ist aufgetreten: {e}")
         import traceback
         traceback.print_exc()
+
 
 
