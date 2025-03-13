@@ -32,7 +32,8 @@ if prompt:
     # DeepSeek API-Aufruf
     try:
         response = client.chat.completions.create(
-            model="deepseek-coder-r1",  # Modellname auf "deepseek-coder-r1" geändert
+            model="deepseek-reasoner",  # Für R1-Modell (falls verfügbar)
+            # model="deepseek-chat",  # Alternativ für allgemeine Aufgaben
             messages=st.session_state.messages,
             stream=False,  # Stream-Parameter hinzugefügt, falls erforderlich
         )
