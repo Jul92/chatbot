@@ -1,15 +1,19 @@
 import streamlit as st
 from openai import OpenAI
+import sys
+
+# Sicherstellen, dass UTF-8 als Standard-Encoding genutzt wird
+sys.stdout.reconfigure(encoding='utf-8')
 
 # DeepSeek API-Schlüssel (ersetze durch deinen eigenen Schlüssel)
-API_KEY = "DEIN_API_SCHLÜSSEL_HIER"
+API_KEY = "sk-2c8fc6bcd4db4cefa226a4cc0e89e28e"
 BASE_URL = "https://api.deepseek.com"
 MODEL_NAME = "deepseek-coder-v2"
 
 # OpenAI Client für DeepSeek-Coder-V2 initialisieren
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-st.title("DeepSeek Coder V2 Chatbot")
+st.title("AI Coder")
 
 # Chat-Verlauf im Sitzungszustand speichern
 if "messages" not in st.session_state:
@@ -35,10 +39,14 @@ if prompt:
             messages=st.session_state.messages,
         )
         
-        msg = response.choices[0].message.content
+        msg = response.choices[0].message.content.encode('utf-8', 'ignore').decode('utf-8')
+        
         st.session_state.messages.append({"role": "assistant", "content": msg})
         with st.chat_message("assistant"):
             st.markdown(msg)
     except Exception as e:
         st.error(f"Ein Fehler ist aufgetreten: {e}")
+        import traceback
+        traceback.print_exc()
+
 
