@@ -6,6 +6,7 @@ st.title("AI Coder")
 # DeepSeek API-Schlüssel direkt hier einfügen
 api_key = "sk-2c8fc6bcd4db4cefa226a4cc0e89e28e"  # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 
+# DeepSeek-Client initialisieren
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"
@@ -31,8 +32,9 @@ if prompt:
     # DeepSeek API-Aufruf
     try:
         response = client.chat.completions.create(
-            model="deepseek-r1",
+            model="deepseek-coder-r1",  # Modellname auf "deepseek-coder-r1" geändert
             messages=st.session_state.messages,
+            stream=False,  # Stream-Parameter hinzugefügt, falls erforderlich
         )
         msg = response.choices[0].message.content
         st.session_state.messages.append({"role": "assistant", "content": msg})
