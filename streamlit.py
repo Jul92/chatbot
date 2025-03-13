@@ -8,7 +8,7 @@ api_key = "sk-2c8fc6bcd4db4cefa226a4cc0e89e28e"  # ERSETZE DIES DURCH DEINEN TAT
 
 client = OpenAI(
     api_key=api_key,
-    base_url="https://api.deepseek.com/v2"
+    base_url="https://api.deepseek.com/coder-v2"
 )
 
 # Chat-Verlauf (im Sitzungszustand)
