@@ -1,10 +1,13 @@
 import streamlit as st
 from openai import OpenAI
+import nbformat
 
 st.title("AI Coder")
 
 # DeepSeek API-Schlüssel direkt hier einfügen
-api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+api_key = "sk-8981cca98489449489e2951c8b032959"
+#api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+
 
 # DeepSeek-Client initialisieren
 client = OpenAI(
@@ -42,11 +45,3 @@ if prompt:
             st.markdown(msg)
     except Exception as e:
         st.error(f"Ein Fehler ist aufgetreten: {e}")
-
-
-
-
-
-
-
-
