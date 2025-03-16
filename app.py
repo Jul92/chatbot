@@ -20,7 +20,6 @@ def call_vector_database(query_text, number_data):
     if response.status_code == 200:
         # Parse JSON response
         data = response.json()
-        print("✅ Data received:")
         result = {key: data[key][0]
                   for key in ["ids", "documents", "distances"]}
         return result
@@ -34,7 +33,10 @@ st.title("AI Coder")
 
 st.sidebar.markdown("## Parameters")
 st.sidebar.divider()
-option = st.sidebar.checkbox("Use CS50 Database")
+option = st.sidebar.radio(
+    "Choose your helper:",
+    ["Havard CS50 Database", "Deepseek", "Deepseek Coder"]
+)
 database_results = st.sidebar.number_input(
     "Number of retrieved data: ",
     value = 3,
@@ -73,53 +75,73 @@ for message in st.session_state.messages:
 
 # Benutzereingabe
 prompt = st.chat_input("Deine Nachricht")
+
 if prompt:
-    # Call Datenbank
-    results = call_vector_database(prompt, number_data= database_results)
-    print(results["distances"])
 
-    # Write message
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    # Call Havard Database:
+    if option == "Havard CS50 Database":
 
-    # Get data from database
-    if results != -1 and option:
-        # DeepSeek API-Aufruf
-        try:
-            # Neuer Prompt mit Vektor Datenbank
-            db_txt_data = '/n/n'.join(results['documents'])
-            rag_prompt = f"""
+        # Call Datenbank
+        results = call_vector_database(prompt, number_data= database_results)
+        print(results["distances"])
+        min_distance = min(results["distances"])
 
-                        You are an assistent which answers questions based on knowledge which is provided to you.
-                        While answering, you don't use your internal knowledge,
-                        but solely the information in the "The knowledge" section.
-                        You don't mention anything to the user about the povided knowledge.
+        # Write message
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-                        The question: {prompt}
+        # Get data from database
+        if results != -1 and min_distance <= max_distance:
+            # DeepSeek API-Aufruf
+            try:
+                # Neuer Prompt mit Vektor Datenbank
+                db_txt_data = '/n/n'.join(results['documents'])
+                rag_prompt = f"""
 
-                        The knowledge: {db_txt_data}
-                        """
-            st.session_state.messages.append({"role": "user", "content": rag_prompt})
+                            You are an assistent which answers questions based on knowledge which is provided to you.
+                            While answering, you don't use your internal knowledge,
+                            but solely the information in the "The knowledge" section.
+                            You don't mention anything to the user about the povided knowledge.
 
-            # Prompt mit deepseek verbinden
-            response = client.chat.completions.create(
-                model="deepseek-reasoner",  # DeepSeek R1
-                messages=st.session_state.messages,
-                stream=False  # Stream-Parameter hinzugefügt, falls erforderlich
-            )
-            msg = response.choices[0].message.content
+                            The question: {prompt}
 
-            # Session schreiben
-            st.session_state.messages.pop()
+                            The knowledge: {db_txt_data}
+                            """
+                st.session_state.messages.append({"role": "user", "content": rag_prompt})
+
+                # Prompt mit deepseek verbinden
+                response = client.chat.completions.create(
+                    model="deepseek-reasoner",  # DeepSeek R1
+                    messages=st.session_state.messages,
+                    stream=False  # Stream-Parameter hinzugefügt, falls erforderlich
+                )
+                msg = response.choices[0].message.content
+
+                # Session schreiben
+                st.session_state.messages.pop()
+                st.session_state.messages.append({"role": "user", "content": prompt})
+                st.session_state.messages.append({"role": "assistant", "content": msg})
+                with st.chat_message("assistant"):
+                    st.markdown(msg)
+
+            except Exception as e:
+                st.error(f"Ein Fehler ist aufgetreten: {e}")
+
+        # no good data found
+        elif results != -1 and min_distance > max_distance:
+            msg = "Unfortunately there are no entries in the CS50 database with the parameters you have set. Therefore, I cannot answer your question."
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.session_state.messages.append({"role": "assistant", "content": msg})
             with st.chat_message("assistant"):
                 st.markdown(msg)
 
-        except Exception as e:
-            st.error(f"Ein Fehler ist aufgetreten: {e}")
+        # database doesn't respond
+        else:
+            st.error("There is no access to the CS50 database.")
 
-    elif not option:
+
+    # Call Deepseek
+    elif option == "Deepseek":
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         # DeepSeek API-Aufruf
@@ -136,5 +158,6 @@ if prompt:
         except Exception as e:
             st.error(f"Ein Fehler ist aufgetreten: {e}")
 
+    # Call Coder to solve jupyter notebooks
     else:
-        st.error(f"Datenbank ist nicht erreichbar.")
+        st.error(f"Coder is not implemented yet")
