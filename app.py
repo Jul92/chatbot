@@ -3,7 +3,7 @@ from openai import OpenAI
 import nbformat
 import requests
 
-# ========== Functions ===============
+# ========== Functions ===========
 # Call vector database
 def call_vector_database(query_text, number_data):
     # Vector database API URL
@@ -28,7 +28,8 @@ def call_vector_database(query_text, number_data):
         return -1
 
 
-# ======== App skeleton ===========
+
+# ========== App Appearance ==========
 st.title("AI Coder")
 
 st.sidebar.markdown("## Parameters")
@@ -37,44 +38,53 @@ option = st.sidebar.radio(
     "Choose your helper:",
     ["Havard CS50 Database", "Deepseek", "Deepseek Coder"]
 )
-database_results = st.sidebar.number_input(
-    "Number of retrieved data: ",
-    value = 3,
-    min_value=1,
-    max_value=20,
-    step=1
-)
-max_distance = st.sidebar.number_input(
-    "Maximum distance to embedded query: ",
-    value = 1.00,
-    min_value=0.01,
-    step=0.01
-)
+database_results = 3
+max_distance = 1
 
-# DeepSeek API-Schlüssel direkt hier einfügen
+if option == "Havard CS50 Database":
+    database_results = st.sidebar.number_input(
+        "Number of retrieved data: ",
+        value = 3,
+        min_value=1,
+        max_value=20,
+        step=1
+    )
+    max_distance = st.sidebar.number_input(
+        "Maximum distance to embedded query: ",
+        value = 1.00,
+        min_value=0.01,
+        step=0.01
+    )
+
+
+
+# ========== Deepseek setup ==========
 api_key = "sk-8981cca98489449489e2951c8b032959"
 #api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
-
-
-# DeepSeek-Client initialisieren
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"
 )
 
 
-# Chat-Verlauf (im Sitzungszustand)
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": "Du bist ein hilfreicher Assistent."}]
 
-# Nachrichten anzeigen
+# ========== Chat ==========
+# Chat-start
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "system", "content": "You are a helpful assistant."}]
+
+# view all messages permanently
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# Benutzereingabe
-prompt = st.chat_input("Deine Nachricht")
+# User Input
+prompt = st.chat_input("Your message")
+
+
+
+# ========== Chatbot answer ==========
 
 if prompt:
 
@@ -83,8 +93,7 @@ if prompt:
 
         # Call Datenbank
         results = call_vector_database(prompt, number_data= database_results)
-        print(results["distances"])
-        min_distance = min(results["distances"])
+        min_distance = min(results["distances"])        # minimum distance in similarity search
 
         # Write message
         with st.chat_message("user"):
@@ -94,7 +103,7 @@ if prompt:
         if results != -1 and min_distance <= max_distance:
             # DeepSeek API-Aufruf
             try:
-                # Neuer Prompt mit Vektor Datenbank
+                # Define new prompt with input from vector database
                 db_txt_data = '/n/n'.join(results['documents'])
                 rag_prompt = f"""
 
@@ -109,15 +118,15 @@ if prompt:
                             """
                 st.session_state.messages.append({"role": "user", "content": rag_prompt})
 
-                # Prompt mit deepseek verbinden
+                # Get result of rag_prompt from deepseek
                 response = client.chat.completions.create(
                     model="deepseek-reasoner",  # DeepSeek R1
                     messages=st.session_state.messages,
-                    stream=False  # Stream-Parameter hinzugefügt, falls erforderlich
+                    stream=False
                 )
                 msg = response.choices[0].message.content
 
-                # Session schreiben
+                # Write session with answer
                 st.session_state.messages.pop()
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 st.session_state.messages.append({"role": "assistant", "content": msg})
@@ -125,11 +134,11 @@ if prompt:
                     st.markdown(msg)
 
             except Exception as e:
-                st.error(f"Ein Fehler ist aufgetreten: {e}")
+                st.error(f"An error occured: {e}")
 
         # no good data found
         elif results != -1 and min_distance > max_distance:
-            msg = "Unfortunately there are no entries in the CS50 database with the parameters you have set. Therefore, I cannot answer your question."
+            msg = "Unfortunately there is no data in the CS50 database with the parameters you have set. Therefore, I cannot answer your question."
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.session_state.messages.append({"role": "assistant", "content": msg})
             with st.chat_message("assistant"):
@@ -140,23 +149,30 @@ if prompt:
             st.error("There is no access to the CS50 database.")
 
 
+
     # Call Deepseek
     elif option == "Deepseek":
+        # Write message
         st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-        # DeepSeek API-Aufruf
+        # DeepSeek API
         try:
             response = client.chat.completions.create(
                 model="deepseek-reasoner",  # DeepSeek R1
                 messages=st.session_state.messages,
-                stream=False  # Stream-Parameter hinzugefügt, falls erforderlich
+                stream=False
             )
+
+            # Write session with answer
             msg = response.choices[0].message.content
             st.session_state.messages.append({"role": "assistant", "content": msg})
             with st.chat_message("assistant"):
                 st.markdown(msg)
+
         except Exception as e:
-            st.error(f"Ein Fehler ist aufgetreten: {e}")
+            st.error(f"An error occured: {e}")
 
     # Call Coder to solve jupyter notebooks
     else:
