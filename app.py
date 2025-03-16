@@ -38,8 +38,19 @@ option = st.sidebar.radio(
     "Choose your helper:",
     ["Havard CS50 Database", "Deepseek", "Deepseek Coder"]
 )
+
 database_results = 3
 max_distance = 1
+havard_sources = {'CS50x' : '[CS50x](https://cs50.harvard.edu/x/)',
+                  'CS50-AI' : '[CS50-AI](https://cs50.harvard.edu/ai/)',
+                  'CS50-Business' : '[CS50-Business](https://cs50.harvard.edu/business/)',
+                  'CS50-Cybersecurity' : '[CS50-Cybersecurity](https://cs50.harvard.edu/cybersecurity/)',
+                  'CS50-for-Lawyers' : '[CS50-for-Lawyers](https://cs50.harvard.edu/law/)',
+                  'CS50-Python': '[CS50-Python](https://cs50.harvard.edu/python/)',
+                  'CS50-R' : '[CS50-R](https://cs50.harvard.edu/r/)',
+                  'CS50-Scratch' : '[CS50-Scratch](https://cs50.harvard.edu/scratch/)',
+                  'CS50-SQL' : '[CS50-SQL](https://cs50.harvard.edu/sql/)',
+                  'CS50-Web' : '[CS50-Web](https://cs50.harvard.edu/web/)'}
 
 if option == "Havard CS50 Database":
     database_results = st.sidebar.number_input(
@@ -55,6 +66,7 @@ if option == "Havard CS50 Database":
         min_value=0.01,
         step=0.01
     )
+    display_sources = st.sidebar.checkbox("Display sources: ")
 
 
 
@@ -101,10 +113,10 @@ if prompt:
 
         # Get data from database
         if results != -1 and min_distance <= max_distance:
-            # DeepSeek API-Aufruf
+            # DeepSeek API
             try:
                 # Define new prompt with input from vector database
-                db_txt_data = '/n/n'.join(results['documents'])
+                db_txt_data = '\n\n'.join(results['documents'])
                 rag_prompt = f"""
 
                             You are an assistent which answers questions based on knowledge which is provided to you.
@@ -126,6 +138,17 @@ if prompt:
                 )
                 msg = response.choices[0].message.content
 
+                # Display sources in vector database
+                if display_sources:
+                    sources = ""
+                    for element in results['ids']:
+                        ids_list = element.split('_')
+                        havard_key, havard_lecture, havard_time = ids_list[0], ids_list[1], ids_list[-1]
+                        havard_link = havard_sources[havard_key]
+                        sources += '\n\n' + havard_link + ' in lecture ' + havard_lecture + ' at ' + havard_time
+                    msg = msg + sources
+
+                #print(results['ids'])
                 # Write session with answer
                 st.session_state.messages.pop()
                 st.session_state.messages.append({"role": "user", "content": prompt})
