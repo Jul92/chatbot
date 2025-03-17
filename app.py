@@ -145,7 +145,9 @@ if prompt:
                         ids_list = element.split('_')
                         havard_key, havard_lecture, havard_time = ids_list[0], ids_list[1], ids_list[-1]
                         havard_link = havard_sources[havard_key]
-                        sources += '\n\n' + havard_link + ' in lecture ' + havard_lecture[7] + ' at ' + havard_time
+                        # One Havard lecture is additional and has no number
+                        havard_lecture_number = havard_lecture[7] if (havard_lecture != 'Artificial-Intelligence') else havard_lecture
+                        sources += '\n\n' + havard_link + ' in lecture ' + havard_lecture_number + ' at ' + havard_time
                     msg = msg + sources
 
                 # Write session with answer
