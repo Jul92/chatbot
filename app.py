@@ -145,10 +145,9 @@ if prompt:
                         ids_list = element.split('_')
                         havard_key, havard_lecture, havard_time = ids_list[0], ids_list[1], ids_list[-1]
                         havard_link = havard_sources[havard_key]
-                        sources += '\n\n' + havard_link + ' in lecture ' + havard_lecture + ' at ' + havard_time
+                        sources += '\n\n' + havard_link + ' in lecture ' + havard_lecture[7] + ' at ' + havard_time
                     msg = msg + sources
 
-                #print(results['ids'])
                 # Write session with answer
                 st.session_state.messages.pop()
                 st.session_state.messages.append({"role": "user", "content": prompt})
