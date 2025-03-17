@@ -71,8 +71,7 @@ if option == "Havard CS50 Database":
 
 
 # ========== Deepseek setup ==========
-api_key = "sk-8981cca98489449489e2951c8b032959"
-#api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"
