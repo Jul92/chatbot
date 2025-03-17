@@ -162,7 +162,7 @@ if option == "Harvard CS50 Database":
         max_value = 5.00,
         step=0.01
     )
-    display_sources = st.sidebar.checkbox("Display sources: ")
+    display_sources = st.sidebar.checkbox("Display sources: ", value = True)
 
 
 
