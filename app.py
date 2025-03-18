@@ -47,21 +47,72 @@ def get_youtube_link(havard_id, havard_sources):
 
     return youtube_link
 
+def transform_notebook_file_to_markdown(uploaded_file):
+    # Read jupyter notebook
+    markdown_notebook = ""
+    notebook_content = uploaded_file.read().decode("utf-8")
+    notebook = nbformat.reads(notebook_content, as_version=4)
+
+    # Create markdown txt cell
+    # Double line break for dividing
+    for cell in notebook.cells:
+        if cell.cell_type == "markdown":
+            markdown_notebook += f"{cell.source}" + '\n\n'
+        elif cell.cell_type == "code":
+            markdown_notebook += '```python \n\n' + f"{cell.source}".strip() + '\n\n```' +'\n\n'
+
+    return markdown_notebook.strip()
 
 
-# ========== App Appearance ==========
-st.title("AI Coder")
+def call_jupyter_environment(markdown_notebook):
+    # Jupyter environment API URL
+    jupyter_url = "https://notebookchecker-245941724758.europe-west1.run.app/test_run"
 
-st.sidebar.markdown("## Parameters")
-st.sidebar.divider()
-option = st.sidebar.radio(
-    "Choose your helper:",
-    ["Harvard CS50 Database", "Deepseek", "Deepseek Coder"]
-)
+    # Make a POST request
+    response = requests.post(jupyter_url, json={"string_notebook": markdown_notebook})
 
-database_results = 3
-max_distance = 1
+    # Check the response status code
+    if response.status_code == 200:
+        # Parse JSON response
+        result = response.json()
+        return result
 
+    else:
+        return None
+
+
+def deepseek_create_notebook(new_prompt, prompt, client):
+    # Write message
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    try:
+        # New Prompt
+        st.session_state.messages.append({"role": "user", "content": new_prompt})
+
+        # Get result of rag_prompt from deepseek
+        response = client.chat.completions.create(
+                            model="deepseek-reasoner",  # DeepSeek R1
+                            messages=st.session_state.messages,
+                            stream=False
+                            )
+        msg = response.choices[0].message.content
+
+        # Write session with answer
+        st.session_state.messages.pop()
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({"role": "assistant", "content": msg})
+        with st.chat_message("assistant"):
+            st.markdown(msg)
+
+        return  msg
+
+    except Exception as e:
+        st.error(f"An error occured: {e}")
+        return None
+
+
+# ========== Harvard Youtube ==========
 havard_sources = {
 	'CS50x_Lecture0': '[CS50x Lecture 0](https://www.youtube.com/watch?v=2WtPyqwTLKM)',  # CS50 CS50x lectures
 	'CS50x_Lecture1': '[CS50x Lecture 1](https://www.youtube.com/watch?v=89cbCbWrM4U)',
@@ -147,6 +198,24 @@ havard_sources = {
 	'CS50-Web_Lecture8': '[CS50-Web Lecture 8](https://www.youtube.com/watch?v=6PWTxRGh_dk)',
 }
 
+
+
+
+# ========== App Appearance ==========
+st.title("AI Coder")
+
+st.sidebar.markdown("## Parameters")
+st.sidebar.divider()
+option = st.sidebar.radio(
+    "Choose your helper:",
+    ["Harvard CS50 Database", "Pure Deepseek", "Deepseek Coder"]
+)
+
+database_results = 3
+max_distance = 1
+iter_num = 2
+notebook_upload = None
+
 if option == "Harvard CS50 Database":
     database_results = st.sidebar.slider(
         "Number of retrieved data: ",
@@ -164,6 +233,15 @@ if option == "Harvard CS50 Database":
     )
     display_sources = st.sidebar.checkbox("Display sources: ", value = True)
 
+if option == "Deepseek Coder":
+    iter_num = st.sidebar.slider(
+        'Number of iterations',
+        value = 5,
+        min_value=1,
+        max_value= 50,
+        step = 1
+    )
+    notebook_upload = st.sidebar.file_uploader("Upload your jupyter notebook", type=["ipynb"])
 
 
 # ========== Deepseek setup ==========
@@ -267,7 +345,7 @@ if prompt:
 
 
     # Call Deepseek
-    elif option == "Deepseek":
+    elif option == "Pure Deepseek":
         # Write message
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -292,4 +370,111 @@ if prompt:
 
     # Call Coder to solve jupyter notebooks
     else:
-        st.error(f"Coder is not implemented yet")
+        # Upload Jupyter notebook
+        if notebook_upload:
+            # Transform notebook in markdown
+            markdown_notebook = transform_notebook_file_to_markdown(notebook_upload)
+
+            # Create deepseek Notebook
+            new_prompt = f"""
+                            The question: {prompt}
+
+                            A user have uploaded a jupyter notebook, which is displayed in "The notebook".
+                            Correct the code. Give me back only the python code with comments.
+                            The python environment has no packages installed, so you need to pip install all imported packages.
+
+                            "The notebook": {markdown_notebook}
+                        """
+
+            # Call deepseek with prompt
+            deepseek_notebook = deepseek_create_notebook(new_prompt, prompt, client)
+
+            # Send notebook to environment
+            notebook_result = call_jupyter_environment(deepseek_notebook)
+
+            # Iterate repeated over while loop to get a better answer
+            iter = 1
+            error_appeared = notebook_result['error_appeared']
+            error_message = notebook_result['error_message']
+            print(notebook_result)
+
+            while iter < iter_num and error_appeared:
+                # Write message
+                prompt = f"Iteration {iter} with error {error_message}"
+
+                new_prompt = f"""
+                        In the following jupyter notebook occurred an error.
+                        The jupyter notebook is displayed by "The notebook" and the error by "Error message".
+                        Give me back only the python code with comments and corrections included.
+                        The python environment has no packages installed, so you need to pip install all imported packages.
+
+                        "The notebook": {deepseek_notebook}
+
+                        "Error message": {error_message}
+                        """
+                # Create deepseek notebook
+                deepseek_notebook = deepseek_create_notebook(new_prompt, prompt, client)
+
+                # Send notebook to environment
+                notebook_result = call_jupyter_environment(deepseek_notebook)
+                error_appeared = notebook_result['error_appeared']
+                error_message = notebook_result['error_message']
+                iter += 1
+
+            # Notebook have still errors
+            if error_appeared:
+                st.markdown('❌ Resulting notebooks have errors')
+            else:
+                st.markdown('✅ Resulting notebooks works')
+
+
+        # Create a notebook from scratch
+        else:
+
+            # New Prompt
+            new_prompt = f"""
+                        The question: {prompt}
+
+                        Give me back only the python code with comments
+                        """
+
+            # Call deepseek with prompt
+            deepseek_notebook = deepseek_create_notebook(new_prompt, prompt, client)
+
+            # Send notebook to environment
+            notebook_result = call_jupyter_environment(deepseek_notebook)
+
+            # Iterate repeated over while loop to get a better answer
+            iter = 1
+            error_appeared = notebook_result['error_appeared']
+            error_message = notebook_result['error_message']
+            print(notebook_result)
+
+            while iter < iter_num and error_appeared:
+                # Write message
+                prompt = f"Iteration {iter} with error {error_message}"
+
+                new_prompt = f"""
+                        In the following jupyter notebook occurred an error.
+                        The jupyter notebook is displayed by "The notebook" and the error by "Error message".
+                        Give me back the python code with comments and corrections included.
+                        The python environment has no packages installed, so you need to pip install all imported packages.
+
+                        "The notebook": {deepseek_notebook}
+
+                        "Error message": {error_message}
+                        """
+                # Create deepseek notebook
+                deepseek_notebook = deepseek_create_notebook(new_prompt, prompt, client)
+
+                # Send notebook to environment
+                notebook_result = call_jupyter_environment(deepseek_notebook)
+                error_appeared = notebook_result['error_appeared']
+                error_message = notebook_result['error_message']
+                iter += 1
+
+            # Notebook have still errors
+            if error_appeared:
+                st.markdown('❌ Resulting notebooks have errors')
+            else:
+                st.markdown('✅ Resulting notebooks works')
