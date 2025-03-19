@@ -257,8 +257,7 @@ if option == "Deepseek Coder":
 
 
 # ========== Deepseek setup ==========
-api_key = "sk-e298a7d276f145918c73db74e0940d76"
-#api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"
