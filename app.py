@@ -8,6 +8,7 @@ import requests
 def call_vector_database(query_text, number_data):
     # Vector database API URL
     database_url = "https://vector-db-245941724758.europe-west1.run.app/call_db"
+    scond_data_base_url = "https://vector-db-2-245941724758.europe-west1.run.app/call_db"
     params = {
         "query": query_text,
         "number_results": str(number_data)
@@ -25,7 +26,18 @@ def call_vector_database(query_text, number_data):
         return result
 
     else:
-        return -1
+        # Safety second database, when error appears
+        response = requests.get(scond_data_base_url, params=params)
+
+        if response.status_code == 200:
+            # Parse JSON response
+            data = response.json()
+            result = {key: data[key][0]
+                    for key in ["ids", "documents", "distances"]}
+            return result
+
+        else:
+            return -1
 
 def get_youtube_link(havard_id, havard_sources):
     # All sources in ids
@@ -225,7 +237,7 @@ if option == "Harvard CS50 Database":
         step=1
     )
     max_distance = st.sidebar.slider(
-        "Similarity: ",
+        "Similarity distance: ",
         value = 1.00,
         min_value=0.01,
         max_value = 5.00,
@@ -279,7 +291,7 @@ if prompt:
 
         # Call Datenbank
         results = call_vector_database(prompt, number_data= database_results)
-        min_distance = min(results["distances"]) if results != -1 else 0        # minimum distance in similarity search
+        min_distance = min(results["distances"]) if results != -1 else 0        # minimum distance in similarity search, only if database available
 
         # Write message
         with st.chat_message("user"):
