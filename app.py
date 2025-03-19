@@ -257,10 +257,11 @@ if option == "Deepseek Coder":
 
 
 # ========== Deepseek setup ==========
-api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+api_key = "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"
+#api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 client = OpenAI(
     api_key=api_key,
-    base_url="https://api.deepseek.com"
+    base_url="https://openrouter.ai/api/v1"
 )
 
 
