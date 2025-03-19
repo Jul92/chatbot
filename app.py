@@ -245,7 +245,8 @@ if option == "Deepseek Coder":
 
 
 # ========== Deepseek setup ==========
-api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+api_key = "sk-e298a7d276f145918c73db74e0940d76"
+#api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"
@@ -278,7 +279,7 @@ if prompt:
 
         # Call Datenbank
         results = call_vector_database(prompt, number_data= database_results)
-        min_distance = min(results["distances"])        # minimum distance in similarity search
+        min_distance = min(results["distances"]) if results != -1 else 0        # minimum distance in similarity search
 
         # Write message
         with st.chat_message("user"):
