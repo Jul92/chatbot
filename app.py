@@ -8,7 +8,6 @@ import requests
 def call_vector_database(query_text, number_data):
     # Vector database API URL
     database_url = "https://vector-db-245941724758.europe-west1.run.app/call_db"
-    scond_data_base_url = "https://vector-db-2-245941724758.europe-west1.run.app/call_db"
     params = {
         "query": query_text,
         "number_results": str(number_data)
