@@ -7,8 +7,7 @@ import requests
 # Call vector database
 def call_vector_database(query_text, number_data):
     # Vector database API URL
-    database_url = "https://vector-db-245941724758.europe-west1.run.app/call_db"
-    scond_data_base_url = "https://vector-db-2-245941724758.europe-west1.run.app/call_db"
+    database_url = "https://havard-data-245941724758.europe-west1.run.app/call_db"
     params = {
         "query": query_text,
         "number_results": str(number_data)
@@ -26,18 +25,7 @@ def call_vector_database(query_text, number_data):
         return result
 
     else:
-        # Safety second database, when error appears
-        response = requests.get(scond_data_base_url, params=params)
-
-        if response.status_code == 200:
-            # Parse JSON response
-            data = response.json()
-            result = {key: data[key][0]
-                    for key in ["ids", "documents", "distances"]}
-            return result
-
-        else:
-            return -1
+        return -1
 
 def get_youtube_link(havard_id, havard_sources):
     # All sources in ids
