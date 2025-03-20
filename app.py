@@ -7,7 +7,7 @@ import requests
 # Call vector database
 def call_vector_database(query_text, number_data):
     # Vector database API URL
-    database_url = "https://vector-db-245941724758.europe-west1.run.app/call_db"
+    database_url = "https://havard-data-245941724758.europe-west1.run.app/call_db"
     params = {
         "query": query_text,
         "number_results": str(number_data)
@@ -25,18 +25,7 @@ def call_vector_database(query_text, number_data):
         return result
 
     else:
-        # Safety second database, when error appears
-        response = requests.get(scond_data_base_url, params=params)
-
-        if response.status_code == 200:
-            # Parse JSON response
-            data = response.json()
-            result = {key: data[key][0]
-                    for key in ["ids", "documents", "distances"]}
-            return result
-
-        else:
-            return -1
+        return -1
 
 def get_youtube_link(havard_id, havard_sources):
     # All sources in ids
@@ -256,11 +245,10 @@ if option == "Deepseek Coder":
 
 
 # ========== Deepseek setup ==========
-api_key = "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"
-#api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
+api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 client = OpenAI(
     api_key=api_key,
-    base_url="https://openrouter.ai/api/v1"
+    base_url="https://api.deepseek.com"
 )
 
 
