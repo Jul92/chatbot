@@ -92,7 +92,7 @@ def deepseek_create_notebook(new_prompt, prompt, client):
 
         # Get result of rag_prompt from deepseek
         response = client.chat.completions.create(
-                            model="deepseek-reasoner",  # DeepSeek R1
+                            model="deepseek/deepseek-r1-zero:free",  # DeepSeek R1
                             messages=st.session_state.messages,
                             stream=False
                             )
@@ -248,7 +248,7 @@ if option == "Deepseek Coder":
 api_key = st.secrets["API_KEY"] # ERSETZE DIES DURCH DEINEN TATSÄCHLICHEN API-SCHLÜSSEL
 client = OpenAI(
     api_key=api_key,
-    base_url="https://api.deepseek.com"
+    base_url="https://openrouter.ai/api/v1"
 )
 
 
@@ -305,7 +305,7 @@ if prompt:
 
                 # Get result of rag_prompt from deepseek
                 response = client.chat.completions.create(
-                    model="deepseek-reasoner",  # DeepSeek R1
+                    model="deepseek/deepseek-r1-zero:free",  # DeepSeek R1
                     messages=st.session_state.messages,
                     stream=False
                 )
@@ -354,7 +354,7 @@ if prompt:
         # DeepSeek API
         try:
             response = client.chat.completions.create(
-                model="deepseek-reasoner",  # DeepSeek R1
+                model="deepseek/deepseek-r1-zero:free",  # DeepSeek R1
                 messages=st.session_state.messages,
                 stream=False
             )
